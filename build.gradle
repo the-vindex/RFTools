@@ -1,9 +1,9 @@
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net/"
         }
         maven {
             name = "sonatype"
@@ -15,49 +15,19 @@ buildscript {
     }
 }
 
-plugins {
-    id 'com.matthewprenger.cursegradle' version '1.1.0'
-}
-
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'maven'
 
 repositories {
-    maven { // The repo from which to get waila
-        name "Mobius Repo"
-        url "https://tehnut.info/maven"
-        //url "http://mobiusstrip.eu/maven"
-    }
-    maven { // JEI
-        url "http://dvs1.progwml6.com/files/maven"
-    }
-    maven {
-        name 'OC Repo'
-        url "http://maven.cil.li/"
-    }
-    maven { // TOP
-        name 'tterrag maven'
-        url "https://maven.tterrag.com/"
-    }
-    maven { // McJtyLib
-        url "http://maven.k-4u.nl"
-    }
-    maven {
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-    maven {
-        name = "CoFH Maven"
-        url = "http://maven.covers1624.net"
-    }
-    maven { // Charset
-        name = "Elytra Maven"
-        url = "https://repo.elytradev.com"
-    }
-    maven {
-        name = "TESLA"
-        url = "https://maven.mcmoddev.com"
-    }
+    // The original mod mavens (tehnut, progwml6, k-4u, cil.li, mcmoddev, elytradev) are gone or http-only;
+    // modmaven.dev mirrors the same artifacts. HEI (the pack's JEI) comes from local-maven/ (scripts/fetch-libs.sh).
+    mavenCentral()
+    maven { url "https://modmaven.dev/" }
+    maven { url "https://maven.cil.li/" }
+    maven { url "https://cursemaven.com/" } // Hwyla (no maven of its own any more)
+    maven { url "https://maven.covers1624.net/" }
+    maven { url "https://maven.tterrag.com/" }
+    maven { url "file://${projectDir}/local-maven" }
 }
 
 def ENV = System.getenv()
@@ -89,8 +59,8 @@ artifacts {
 
 
 dependencies {
-    deobfCompile "mezz.jei:jei_${jei_version}"
-    deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
+    deobfCompile "local.mods:HadEnoughItems:${hei_version}"
+    deobfCompile "curse.maven:hwyla-253449:2506337" // Hwyla ${waila_version}
     deobfCompile "mcjty.theoneprobe:TheOneProbe-${top_version}"
     deobfCompile "cofh:RedstoneFlux:${redstoneflux_version}"
     deobfCompile "net.darkhax.tesla:Tesla-${tesla_version}"
@@ -106,6 +76,7 @@ dependencies {
 	compile project(':XNet')
     }
     compile "li.cil.oc:OpenComputers:${oc_version}"
+    testCompile "junit:junit:4.12"
 }
 
 jar {
@@ -209,29 +180,4 @@ String getChangelogText() {
         }
     }
     return str
-}
-
-tasks.curseforge.enabled = project.hasProperty('curseforge_key')
-
-curseforge {
-    if (project.hasProperty('curseforge_key')) {
-        apiKey = project.curseforge_key
-    }
-
-    project {
-        id = project.projectId
-        changelog = System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
-        changelogType = 'html'
-        releaseType = project.curse_type
-        addGameVersion '1.12.2'
-        mainArtifact(jar) {
-            displayName = "${modname} - ${version}"
-        }
-        relations {
-            requiredLibrary 'mcjtylib'
-            optionalLibrary 'the-one-probe'
-            optionalLibrary 'interaction-wheel'
-            optionalLibrary 'redstone-flux'
-        }
-    }
 }

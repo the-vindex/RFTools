@@ -2,7 +2,6 @@ package mcjty.rftools.compat.jei;
 
 import mcjty.rftools.blocks.storage.ModularStorageContainer;
 import mcjty.rftools.blocks.storage.ModularStorageTileEntity;
-import mezz.jei.api.gui.IGuiIngredient;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
@@ -14,7 +13,8 @@ import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ModularStorageRecipeTransferHandler implements IRecipeTransferHandler<ModularStorageContainer> {
 
@@ -30,13 +30,15 @@ public class ModularStorageRecipeTransferHandler implements IRecipeTransferHandl
     @Nullable
     @Override
     public IRecipeTransferError transferRecipe(@Nonnull ModularStorageContainer container, @Nonnull IRecipeLayout recipeLayout, @Nonnull EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
-        Map<Integer, ? extends IGuiIngredient<ItemStack>> guiIngredients = recipeLayout.getItemStacks().getGuiIngredients();
-
         ModularStorageTileEntity te = container.getModularStorageTileEntity();
         BlockPos pos = te.getPos();
 
         if (doTransfer) {
-            RFToolsJeiPlugin.transferRecipe(guiIngredients, pos);
+            List<ItemStack> storage = new ArrayList<>();
+            for (int i = ModularStorageContainer.SLOT_STORAGE; i < te.getSizeInventory(); i++) {
+                storage.add(te.getStackInSlot(i));
+            }
+            JeiTransfer.transfer(recipeLayout, player, storage, pos);
         }
 
         return null;

@@ -14,6 +14,7 @@ import mcjty.lib.typed.TypedMap;
 import mcjty.lib.varia.BlockTools;
 import mcjty.rftools.setup.CommandHandler;
 import mcjty.rftools.RFTools;
+import mcjty.rftools.compat.jei.JeiTransfer;
 import mcjty.rftools.network.RFToolsMessages;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -25,6 +26,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import org.lwjgl.input.Mouse;
 
@@ -101,6 +103,9 @@ public class GuiCraftingGrid {
     }
 
     private void craft(int n) {
+        if (Loader.isModLoaded("jei")) {
+            JeiTransfer.recordCraft(provider.getCraftingGrid().getCraftingGridInventory());
+        }
         RFToolsMessages.sendToServer(CommandHandler.CMD_CRAFT_FROM_GRID,
                 TypedMap.builder().put(CommandHandler.PARAM_COUNT, n).put(CommandHandler.PARAM_TEST, false).put(CommandHandler.PARAM_POS, pos));
     }

@@ -1,7 +1,7 @@
 # Smarter JEI transfer for the crafting grid — design (2026-10-29)
 
 Fork of McJtyMods/RFTools `1.12` (= 7.73, the version in the player's IBP pack). Player decisions: 2026-10-29.
-Status: **draft, awaiting player review**.
+Status: **approved by the player 2026-10-29, implemented** (branch `scanner-jei`; build and tests: README).
 
 ## Constraints
 
