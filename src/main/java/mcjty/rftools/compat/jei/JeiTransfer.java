@@ -10,6 +10,8 @@ import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.recipe.IIngredientType;
 import mezz.jei.api.recipe.IRecipeCategory;
 import mezz.jei.api.recipe.IRecipeWrapper;
+import mezz.jei.api.recipe.transfer.IRecipeTransferError;
+import mezz.jei.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
@@ -34,6 +36,16 @@ public class JeiTransfer {
     private static final Map<List<String>, Map<String, Integer>> easeCache = new HashMap<>();
     private static RecipeMemory memory;
 
+    private static IRecipeTransferHandlerHelper handlerHelper;
+
+    public static void setHandlerHelper(IRecipeTransferHandlerHelper helper) {
+        handlerHelper = helper;
+    }
+
+    static IRecipeTransferHandlerHelper handlerHelper() {
+        return handlerHelper;
+    }
+
     public static void setRecipeRegistry(IRecipeRegistry registry) {
         recipeRegistry = registry;
         easeCache.clear();
@@ -50,7 +62,11 @@ public class JeiTransfer {
         return memory;
     }
 
-    public static void transfer(IRecipeLayout recipeLayout, EntityPlayer player, List<ItemStack> storage, BlockPos pos) {
+    /**
+     * @param doTransfer false for JEI's page view (button state): only works out what is missing, sends nothing
+     * @return null when every recipe slot can be supplied, else the error that makes JEI mark the missing slots red
+     */
+    public static IRecipeTransferError transfer(IRecipeLayout recipeLayout, EntityPlayer player, List<ItemStack> storage, BlockPos pos, boolean doTransfer) {
         Map<Integer, ? extends IGuiIngredient<ItemStack>> guiIngredients = recipeLayout.getItemStacks().getGuiIngredients();
 
         Map<Integer, List<IngredientPicker.Alternative>> slots = new HashMap<>();
@@ -74,6 +90,22 @@ public class JeiTransfer {
             slots.put(entry.getKey(), alts);
         }
 
+        Map<String, Long> stock = new HashMap<>();
+        for (ItemStack stack : player.inventory.mainInventory) {
+            addStock(stock, stack);
+        }
+        for (ItemStack stack : player.inventory.offHandInventory) {
+            addStock(stock, stack);
+        }
+        for (ItemStack stack : storage) {
+            addStock(stock, stack);
+        }
+
+        SortedSet<Integer> missing = MissingIngredients.find(slots, stock);
+        if (!doTransfer) {
+            return missing.isEmpty() ? null : MissingError.create(missing);
+        }
+
         // Grid slot i (1..9) is recipe slot i: the same indices go into PacketSendRecipe.
         Map<Integer, String> remembered = new HashMap<>();
         RecipeMemory.Stack[] grid = output == null ? null : memory().get(output);
@@ -91,17 +123,6 @@ public class JeiTransfer {
             focus = key((ItemStack) f.getValue());
         }
 
-        Map<String, Long> stock = new HashMap<>();
-        for (ItemStack stack : player.inventory.mainInventory) {
-            addStock(stock, stack);
-        }
-        for (ItemStack stack : player.inventory.offHandInventory) {
-            addStock(stock, stack);
-        }
-        for (ItemStack stack : storage) {
-            addStock(stock, stack);
-        }
-
         Map<Integer, Integer> choice = IngredientPicker.pick(slots, remembered, focus, stock, keys -> easeRank(keys, stacks));
 
         ItemStackList items = ItemStackList.create(10);
@@ -115,7 +136,10 @@ public class JeiTransfer {
                 }
             }
         }
+        // Whatever is available goes in, also when something is missing (HEI 4.34.3 never clicks a button that has an
+        // error; a newer HEI with COSMETIC errors does, see MissingError).
         RFToolsMessages.INSTANCE.sendToServer(new PacketSendRecipe(items, pos));
+        return missing.isEmpty() ? null : MissingError.create(missing);
     }
 
     /** The stacks in the container's slots that belong to the given inventory. */

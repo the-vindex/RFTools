@@ -31,11 +31,7 @@ public class StorageScannerRecipeTransferHandler implements IRecipeTransferHandl
         StorageScannerTileEntity te = container.getStorageScannerTileEntity();
         BlockPos pos = te.getCraftingGridContainerPos();
 
-        if (doTransfer) {
-            JeiTransfer.transfer(recipeLayout, player, GuiStorageScanner.fromServer_inventory, pos);
-        }
-
-        return null;
+        return JeiTransfer.transfer(recipeLayout, player, GuiStorageScanner.fromServer_inventory, pos, doTransfer);
     }
 
 }

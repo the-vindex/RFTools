@@ -25,11 +25,7 @@ public class ModularStorageItemRecipeTransferHandler implements IRecipeTransferH
     @Nullable
     @Override
     public IRecipeTransferError transferRecipe(@Nonnull ModularStorageItemContainer container, @Nonnull IRecipeLayout recipeLayout, @Nonnull EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
-        if (doTransfer) {
-            JeiTransfer.transfer(recipeLayout, player, JeiTransfer.stacksIn(container, container.getJEIRecipeAcceptor()), null);
-        }
-
-        return null;
+        return JeiTransfer.transfer(recipeLayout, player, JeiTransfer.stacksIn(container, container.getJEIRecipeAcceptor()), null, doTransfer);
     }
 
 }

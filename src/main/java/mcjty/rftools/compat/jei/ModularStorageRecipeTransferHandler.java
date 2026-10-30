@@ -33,15 +33,11 @@ public class ModularStorageRecipeTransferHandler implements IRecipeTransferHandl
         ModularStorageTileEntity te = container.getModularStorageTileEntity();
         BlockPos pos = te.getPos();
 
-        if (doTransfer) {
-            List<ItemStack> storage = new ArrayList<>();
-            for (int i = ModularStorageContainer.SLOT_STORAGE; i < te.getSizeInventory(); i++) {
-                storage.add(te.getStackInSlot(i));
-            }
-            JeiTransfer.transfer(recipeLayout, player, storage, pos);
+        List<ItemStack> storage = new ArrayList<>();
+        for (int i = ModularStorageContainer.SLOT_STORAGE; i < te.getSizeInventory(); i++) {
+            storage.add(te.getStackInSlot(i));
         }
-
-        return null;
+        return JeiTransfer.transfer(recipeLayout, player, storage, pos, doTransfer);
     }
 
 }
