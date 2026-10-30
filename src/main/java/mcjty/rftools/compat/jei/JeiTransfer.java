@@ -10,8 +10,6 @@ import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.recipe.IIngredientType;
 import mezz.jei.api.recipe.IRecipeCategory;
 import mezz.jei.api.recipe.IRecipeWrapper;
-import mezz.jei.api.recipe.transfer.IRecipeTransferError;
-import mezz.jei.api.recipe.transfer.IRecipeTransferHandlerHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
@@ -36,16 +34,6 @@ public class JeiTransfer {
     private static final Map<List<String>, Map<String, Integer>> easeCache = new HashMap<>();
     private static RecipeMemory memory;
 
-    private static IRecipeTransferHandlerHelper handlerHelper;
-
-    public static void setHandlerHelper(IRecipeTransferHandlerHelper helper) {
-        handlerHelper = helper;
-    }
-
-    static IRecipeTransferHandlerHelper handlerHelper() {
-        return handlerHelper;
-    }
-
     public static void setRecipeRegistry(IRecipeRegistry registry) {
         recipeRegistry = registry;
         easeCache.clear();
@@ -63,10 +51,12 @@ public class JeiTransfer {
     }
 
     /**
+     * Never returns a JEI error (HEI 4.34.3 would grey out and block the '+' button): missing slots are handed to
+     * {@link MissingOverlay}, which draws them red.
+     *
      * @param doTransfer false for JEI's page view (button state): only works out what is missing, sends nothing
-     * @return null when every recipe slot can be supplied, else the error that makes JEI mark the missing slots red
      */
-    public static IRecipeTransferError transfer(IRecipeLayout recipeLayout, EntityPlayer player, List<ItemStack> storage, BlockPos pos, boolean doTransfer) {
+    public static void transfer(IRecipeLayout recipeLayout, EntityPlayer player, List<ItemStack> storage, BlockPos pos, boolean doTransfer) {
         Map<Integer, ? extends IGuiIngredient<ItemStack>> guiIngredients = recipeLayout.getItemStacks().getGuiIngredients();
 
         Map<Integer, List<IngredientPicker.Alternative>> slots = new HashMap<>();
@@ -102,8 +92,9 @@ public class JeiTransfer {
         }
 
         SortedSet<Integer> missing = MissingIngredients.find(slots, stock);
+        MissingOverlay.record(recipeLayout, missing, missingNames(guiIngredients, missing));
         if (!doTransfer) {
-            return missing.isEmpty() ? null : MissingError.create(missing);
+            return;
         }
 
         // Grid slot i (1..9) is recipe slot i: the same indices go into PacketSendRecipe.
@@ -136,10 +127,25 @@ public class JeiTransfer {
                 }
             }
         }
-        // Whatever is available goes in, also when something is missing (HEI 4.34.3 never clicks a button that has an
-        // error; a newer HEI with COSMETIC errors does, see MissingError).
+        // Whatever is available goes in, also when something is missing.
         RFToolsMessages.INSTANCE.sendToServer(new PacketSendRecipe(items, pos));
-        return missing.isEmpty() ? null : MissingError.create(missing);
+    }
+
+    private static List<String> missingNames(Map<Integer, ? extends IGuiIngredient<ItemStack>> guiIngredients, Collection<Integer> missing) {
+        Set<String> names = new LinkedHashSet<>();
+        for (int slot : missing) {
+            IGuiIngredient<ItemStack> gi = guiIngredients.get(slot);
+            if (gi == null) {
+                continue;
+            }
+            for (ItemStack stack : gi.getAllIngredients()) {
+                if (stack != null && !stack.isEmpty()) {
+                    names.add(stack.getDisplayName());
+                    break;
+                }
+            }
+        }
+        return new ArrayList<>(names);
     }
 
     /** The stacks in the container's slots that belong to the given inventory. */

@@ -25,7 +25,8 @@ public class RemoteStorageItemRecipeTransferHandler implements IRecipeTransferHa
     @Nullable
     @Override
     public IRecipeTransferError transferRecipe(@Nonnull RemoteStorageItemContainer container, @Nonnull IRecipeLayout recipeLayout, @Nonnull EntityPlayer player, boolean maxTransfer, boolean doTransfer) {
-        return JeiTransfer.transfer(recipeLayout, player, JeiTransfer.stacksIn(container, container.getJEIRecipeAcceptor()), null, doTransfer);
+        JeiTransfer.transfer(recipeLayout, player, JeiTransfer.stacksIn(container, container.getJEIRecipeAcceptor()), null, doTransfer);
+        return null;
     }
 
 }

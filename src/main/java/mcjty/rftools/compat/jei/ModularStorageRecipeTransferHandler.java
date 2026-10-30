@@ -37,7 +37,8 @@ public class ModularStorageRecipeTransferHandler implements IRecipeTransferHandl
         for (int i = ModularStorageContainer.SLOT_STORAGE; i < te.getSizeInventory(); i++) {
             storage.add(te.getStackInSlot(i));
         }
-        return JeiTransfer.transfer(recipeLayout, player, storage, pos, doTransfer);
+        JeiTransfer.transfer(recipeLayout, player, storage, pos, doTransfer);
+        return null;
     }
 
 }
