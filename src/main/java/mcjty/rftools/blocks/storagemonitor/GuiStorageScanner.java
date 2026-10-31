@@ -74,6 +74,8 @@ public class GuiStorageScanner extends GenericGuiContainer<StorageScannerTileEnt
     public static Set<BlockPos> fromServer_foundInventories = new HashSet<>();
     // From server: the contents of an inventory
     public static List<ItemStack> fromServer_inventory = new ArrayList<>();
+    // The inventory fromServer_inventory was last requested for ((-1,-1,-1) = all starred ones); used by the JEI take-set.
+    public static BlockPos fromServer_inventoryPos = null;
 
     public GuiStorageScanner(StorageScannerTileEntity storageScannerTileEntity, StorageScannerContainer storageScannerContainer) {
         super(RFTools.instance, RFToolsMessages.INSTANCE, storageScannerTileEntity, storageScannerContainer, GuiProxy.GUI_MANUAL_MAIN, "stomon");
@@ -367,6 +369,7 @@ public class GuiStorageScanner extends GenericGuiContainer<StorageScannerTileEnt
 
     private void getInventoryOnServer() {
         BlockPos c = getSelectedContainerPos();
+        fromServer_inventoryPos = c;
         if (c != null) {
             sendServerCommand(RFTools.MODID, CommandHandler.CMD_REQUEST_SCANNER_CONTENTS,
                     TypedMap.builder()

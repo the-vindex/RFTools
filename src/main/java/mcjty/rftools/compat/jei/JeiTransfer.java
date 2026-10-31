@@ -131,7 +131,7 @@ public class JeiTransfer {
         RFToolsMessages.INSTANCE.sendToServer(new PacketSendRecipe(items, pos));
     }
 
-    private static List<String> missingNames(Map<Integer, ? extends IGuiIngredient<ItemStack>> guiIngredients, Collection<Integer> missing) {
+    static List<String> missingNames(Map<Integer, ? extends IGuiIngredient<ItemStack>> guiIngredients, Collection<Integer> missing) {
         Set<String> names = new LinkedHashSet<>();
         for (int slot : missing) {
             IGuiIngredient<ItemStack> gi = guiIngredients.get(slot);
